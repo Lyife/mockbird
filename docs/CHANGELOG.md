@@ -41,4 +41,6 @@ mockbird/
         └── main.ts
 ```
 
+**代码仓库**：https://github.com/Lyife/mockbird
+
 **当前状态**：基础设施 + 前后端骨架就绪，均可独立启动，尚未编写任何业务代码。
