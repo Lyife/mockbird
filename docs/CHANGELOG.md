@@ -44,3 +44,31 @@ mockbird/
 **代码仓库**：https://github.com/Lyife/mockbird
 
 **当前状态**：基础设施 + 前后端骨架就绪，均可独立启动，尚未编写任何业务代码。
+
+## Day 2 — 数据库设计 + MyBatis-Plus 代码生成（2026-05-25）
+
+**完成内容**：
+
+- 设计 4 张核心表，DDL 写入 `db/init.sql`
+- 手动生成 Entity / Mapper / Service / Controller 分层代码
+- Project 完整 RESTful CRUD（`/api/projects`）
+- 真实请求调用代理接口（`POST /api/interfaces/{id}/invoke`），支持 upstream_url 两级解析
+- 12 个 Controller 单元测试全部通过
+
+**数据库表**：
+
+| 表 | 用途 | 关键字段 |
+|----|------|---------|
+| `project` | 项目 | name, description, upstream_url |
+| `api_interface` | 接口定义 | project_id, path, method, upstream_url |
+| `mock_rule` | Mock 规则 | api_interface_id, match_type, response_body, delay_ms, enabled |
+| `request_log` | 请求日志 | project_id, api_interface_id, mock_rule_id, 完整请求/响应/耗时 |
+
+**技术决策**：
+
+| 决策 | 选择 | 原因 |
+|------|------|------|
+| 代码生成 | 手写替代 FastAutoGenerator | JDK 8 兼容性问题 |
+| upstream_url | 项目级 + 接口级两级 | 接口级覆盖，项目级兜底 |
+| 上游调用 | RestTemplate 代理转发 | 避免浏览器 CORS |
+| 测试策略 | 纯 Mockito Controller 单测 | Service/Mapper 无自定义逻辑，测框架无意义 |
