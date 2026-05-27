@@ -72,3 +72,23 @@ mockbird/
 | upstream_url | 项目级 + 接口级两级 | 接口级覆盖，项目级兜底 |
 | 上游调用 | RestTemplate 代理转发 | 避免浏览器 CORS |
 | 测试策略 | 纯 Mockito Controller 单测 | Service/Mapper 无自定义逻辑，测框架无意义 |
+
+## Day 3 — 统一响应格式 + 全局异常处理 + 单元测试规范（2026-05-26）
+
+**完成内容**：
+
+- 定义 `Result<T>` 统一返回体（code/message/data），所有接口返回 JSON 信封
+- 实现 `GlobalExceptionHandler`（@ControllerAdvice），统一处理 ResponseStatusException / MethodArgumentNotValidException / Exception
+- Project 实体 name 字段加 `@NotBlank` 校验，Controller 加 `@Valid`
+- Delete 返回 `Result<Void>` 替代裸字符串 "ok"
+- 测试适配：加 `setControllerAdvice`，jsonPath 加 `$.data` 前缀，错误测试校验 code/message
+- 按 springboot-tdd skill 规范审查并修复 Day 2 测试：补 JaCoCo 插件、补异常/参数校验/参数化测试/verify 校验，19 个测试全部通过
+
+**技术决策**：
+
+| 决策 | 选择 | 原因 |
+|------|------|------|
+| 返回包装 | `Result<T>` 直接返回 | 显式清晰，比 ResponseBodyAdvice 适合学习 |
+| 异常处理 | @ControllerAdvice 三个 handler | 覆盖业务异常、校验异常、兜底异常 |
+| 测试适配 | standaloneSetup + setControllerAdvice | 保持单测速度，不引入 Spring 上下文 |
+| JaCoCo 版本 | 0.8.12 | JDK 8 兼容 |

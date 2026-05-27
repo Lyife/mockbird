@@ -1,5 +1,6 @@
 package com.mockbird.controller;
 
+import com.mockbird.common.Result;
 import com.mockbird.dto.InvokeRequest;
 import com.mockbird.dto.InvokeResponse;
 import com.mockbird.entity.ApiInterface;
@@ -33,7 +34,7 @@ public class ApiInterfaceController {
     private RestTemplate restTemplate;
 
     @PostMapping("/{id}/invoke")
-    public InvokeResponse invoke(@PathVariable Long id, @RequestBody InvokeRequest request) {
+    public Result<InvokeResponse> invoke(@PathVariable Long id, @RequestBody InvokeRequest request) {
         ApiInterface api = apiInterfaceService.getById(id);
         if (api == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "接口不存在: " + id);
@@ -80,6 +81,6 @@ public class ApiInterfaceController {
         result.setHeaders(response.getHeaders());
         result.setBody(response.getBody());
         result.setDurationMs(duration);
-        return result;
+        return Result.success(result);
     }
 }

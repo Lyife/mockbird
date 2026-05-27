@@ -1,5 +1,6 @@
 package com.mockbird.controller;
 
+import com.mockbird.common.Result;
 import com.mockbird.entity.Project;
 import com.mockbird.service.ProjectService;
 import org.springframework.http.HttpStatus;
@@ -7,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.annotation.Resource;
+import javax.validation.Valid;
 import java.util.List;
 
 @RestController
@@ -17,38 +19,41 @@ public class ProjectController {
     private ProjectService projectService;
 
     @GetMapping
-    public List<Project> list() {
-        return projectService.list();
+    public Result<List<Project>> list() {
+        return Result.success(projectService.list());
     }
 
     @GetMapping("/{id}")
-    public Project getById(@PathVariable Long id) {
+    public Result<Project> getById(@PathVariable Long id) {
         Project project = projectService.getById(id);
         if (project == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "项目不存在: " + id);
         }
-        return project;
+        return Result.success(project);
     }
 
     @PostMapping
-    public Project create(@RequestBody Project project) {
+    public Result<Project> create(@Valid @RequestBody Project project) {
         projectService.save(project);
-        return project;
+        return Result.success(project);
     }
 
     @PutMapping("/{id}")
-    public Project update(@PathVariable Long id, @RequestBody Project project) {
+    public Result<Project> update(@PathVariable Long id, @Valid @RequestBody Project project) {
         if (projectService.getById(id) == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "项目不存在: " + id);
         }
         project.setId(id);
         projectService.updateById(project);
-        return project;
+        return Result.success(project);
     }
 
     @DeleteMapping("/{id}")
-    public String delete(@PathVariable Long id) {
+    public Result<Void> delete(@PathVariable Long id) {
+        if (projectService.getById(id) == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "项目不存在: " + id);
+        }
         projectService.removeById(id);
-        return "ok";
+        return Result.success(null);
     }
 }

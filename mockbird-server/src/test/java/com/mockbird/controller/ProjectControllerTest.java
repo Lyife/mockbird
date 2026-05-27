@@ -1,5 +1,6 @@
 package com.mockbird.controller;
 
+import com.mockbird.common.GlobalExceptionHandler;
 import com.mockbird.entity.Project;
 import com.mockbird.service.ProjectService;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,6 +16,8 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.util.Arrays;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -34,7 +37,9 @@ class ProjectControllerTest {
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
+        mockMvc = MockMvcBuilders.standaloneSetup(controller)
+                .setControllerAdvice(new GlobalExceptionHandler())
+                .build();
         project = new Project();
         project.setId(1L);
         project.setName("测试项目");
@@ -47,8 +52,9 @@ class ProjectControllerTest {
 
         mockMvc.perform(get("/api/projects"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(1))
-                .andExpect(jsonPath("$[0].name").value("测试项目"));
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data[0].id").value(1))
+                .andExpect(jsonPath("$.data[0].name").value("测试项目"));
     }
 
     @Test
@@ -57,8 +63,9 @@ class ProjectControllerTest {
 
         mockMvc.perform(get("/api/projects/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.name").value("测试项目"));
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.id").value(1))
+                .andExpect(jsonPath("$.data.name").value("测试项目"));
     }
 
     @Test
@@ -66,7 +73,9 @@ class ProjectControllerTest {
         when(projectService.getById(999L)).thenReturn(null);
 
         mockMvc.perform(get("/api/projects/999"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value(404))
+                .andExpect(jsonPath("$.message").value("项目不存在: 999"));
     }
 
     @Test
@@ -78,7 +87,8 @@ class ProjectControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("新项目"));
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.name").value("新项目"));
     }
 
     @Test
@@ -91,7 +101,11 @@ class ProjectControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("改名后的项目"));
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.name").value("改名后的项目"));
+
+        verify(projectService).updateById(argThat(p ->
+                p.getId().equals(1L) && "改名后的项目".equals(p.getName())));
     }
 
     @Test
@@ -102,15 +116,37 @@ class ProjectControllerTest {
         mockMvc.perform(put("/api/projects/999")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value(404));
     }
 
     @Test
     void shouldDeleteProject() throws Exception {
+        when(projectService.getById(1L)).thenReturn(project);
         when(projectService.removeById(1L)).thenReturn(true);
 
         mockMvc.perform(delete("/api/projects/1"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("ok"));
+                .andExpect(jsonPath("$.code").value(200));
+    }
+
+    @Test
+    void shouldReturn404WhenDeletingMissingProject() throws Exception {
+        when(projectService.getById(999L)).thenReturn(null);
+
+        mockMvc.perform(delete("/api/projects/999"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value(404));
+    }
+
+    @Test
+    void shouldRejectEmptyName() throws Exception {
+        String json = "{\"name\":\"\",\"description\":\"\"}";
+        mockMvc.perform(post("/api/projects")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400))
+                .andExpect(jsonPath("$.message").value("项目名称不能为空"));
     }
 }
