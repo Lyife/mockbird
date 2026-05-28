@@ -1,5 +1,7 @@
 package com.mockbird.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.mockbird.common.GlobalExceptionHandler;
 import com.mockbird.entity.ApiInterface;
 import com.mockbird.entity.Project;
@@ -20,11 +22,12 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
+import java.util.Arrays;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -64,6 +67,8 @@ class ApiInterfaceControllerTest {
         project.setName("测试项目");
         project.setUpstreamUrl("http://upstream:8080");
     }
+
+    // ========== Invoke 测试（已有） ==========
 
     @Test
     void shouldInvokeSuccessfully() throws Exception {
@@ -198,5 +203,203 @@ class ApiInterfaceControllerTest {
                 eq(HttpMethod.GET),
                 any(),
                 eq(String.class));
+    }
+
+    // ========== CRUD 测试（Day 4 新增） ==========
+
+    @Test
+    void shouldReturnPagedInterfaces() throws Exception {
+        Page<ApiInterface> pageResult = new Page<>();
+        pageResult.setRecords(Arrays.asList(apiInterface));
+        pageResult.setTotal(1);
+        pageResult.setCurrent(1);
+        pageResult.setSize(10);
+        when(apiInterfaceService.page(any(Page.class), any(LambdaQueryWrapper.class)))
+                .thenReturn(pageResult);
+        when(projectService.getById(1L)).thenReturn(project);
+
+        mockMvc.perform(get("/api/interfaces"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.list[0].name").value("测试接口"))
+                .andExpect(jsonPath("$.data.list[0].projectName").value("测试项目"))
+                .andExpect(jsonPath("$.data.total").value(1));
+    }
+
+    @Test
+    void shouldFilterByName() throws Exception {
+        Page<ApiInterface> pageResult = new Page<>();
+        pageResult.setRecords(Arrays.asList(apiInterface));
+        pageResult.setTotal(1);
+        pageResult.setCurrent(1);
+        pageResult.setSize(10);
+        when(apiInterfaceService.page(any(Page.class), any(LambdaQueryWrapper.class)))
+                .thenReturn(pageResult);
+        when(projectService.getById(1L)).thenReturn(project);
+
+        mockMvc.perform(get("/api/interfaces?name=测试"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.list[0].name").value("测试接口"));
+    }
+
+    @Test
+    void shouldFilterByMethod() throws Exception {
+        Page<ApiInterface> pageResult = new Page<>();
+        pageResult.setRecords(Arrays.asList(apiInterface));
+        pageResult.setTotal(1);
+        pageResult.setCurrent(1);
+        pageResult.setSize(10);
+        when(apiInterfaceService.page(any(Page.class), any(LambdaQueryWrapper.class)))
+                .thenReturn(pageResult);
+        when(projectService.getById(1L)).thenReturn(project);
+
+        mockMvc.perform(get("/api/interfaces?method=GET"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200));
+    }
+
+    @Test
+    void shouldFilterByProjectId() throws Exception {
+        Page<ApiInterface> pageResult = new Page<>();
+        pageResult.setRecords(Arrays.asList(apiInterface));
+        pageResult.setTotal(1);
+        pageResult.setCurrent(1);
+        pageResult.setSize(10);
+        when(apiInterfaceService.page(any(Page.class), any(LambdaQueryWrapper.class)))
+                .thenReturn(pageResult);
+        when(projectService.getById(1L)).thenReturn(project);
+
+        mockMvc.perform(get("/api/interfaces?projectId=1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200));
+    }
+
+    @Test
+    void shouldReturnInterfaceDetail() throws Exception {
+        when(apiInterfaceService.getById(1L)).thenReturn(apiInterface);
+        when(projectService.getById(1L)).thenReturn(project);
+
+        mockMvc.perform(get("/api/interfaces/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.name").value("测试接口"))
+                .andExpect(jsonPath("$.data.projectName").value("测试项目"));
+    }
+
+    @Test
+    void shouldReturn404WhenInterfaceDetailNotFound() throws Exception {
+        when(apiInterfaceService.getById(999L)).thenReturn(null);
+
+        mockMvc.perform(get("/api/interfaces/999"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value(404))
+                .andExpect(jsonPath("$.message").value("接口不存在: 999"));
+    }
+
+    @Test
+    void shouldCreateInterface() throws Exception {
+        when(apiInterfaceService.save(any(ApiInterface.class))).thenReturn(true);
+        when(projectService.getById(1L)).thenReturn(project);
+
+        String json = "{\"projectId\":1,\"name\":\"新接口\",\"path\":\"/api/new\",\"method\":\"POST\"}";
+        mockMvc.perform(post("/api/interfaces")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.name").value("新接口"))
+                .andExpect(jsonPath("$.data.method").value("POST"));
+    }
+
+    @Test
+    void shouldRejectCreateMissingName() throws Exception {
+        String json = "{\"projectId\":1,\"name\":\"\",\"path\":\"/api/test\",\"method\":\"GET\"}";
+        mockMvc.perform(post("/api/interfaces")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400))
+                .andExpect(jsonPath("$.message").value("接口名称不能为空"));
+    }
+
+    @Test
+    void shouldRejectCreateMissingProjectId() throws Exception {
+        String json = "{\"name\":\"接口\",\"path\":\"/api/test\",\"method\":\"GET\"}";
+        mockMvc.perform(post("/api/interfaces")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400))
+                .andExpect(jsonPath("$.message").value("项目ID不能为空"));
+    }
+
+    @Test
+    void shouldRejectCreateMissingPath() throws Exception {
+        String json = "{\"projectId\":1,\"name\":\"接口\",\"path\":\"\",\"method\":\"GET\"}";
+        mockMvc.perform(post("/api/interfaces")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400))
+                .andExpect(jsonPath("$.message").value("接口路径不能为空"));
+    }
+
+    @Test
+    void shouldRejectCreateMissingMethod() throws Exception {
+        String json = "{\"projectId\":1,\"name\":\"接口\",\"path\":\"/api/test\",\"method\":\"\"}";
+        mockMvc.perform(post("/api/interfaces")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400))
+                .andExpect(jsonPath("$.message").value("请求方法不能为空"));
+    }
+
+    @Test
+    void shouldUpdateInterface() throws Exception {
+        when(apiInterfaceService.getById(1L)).thenReturn(apiInterface);
+        when(apiInterfaceService.updateById(any(ApiInterface.class))).thenReturn(true);
+        when(projectService.getById(1L)).thenReturn(project);
+
+        String json = "{\"name\":\"改名后的接口\",\"path\":\"/api/renamed\",\"method\":\"PUT\"}";
+        mockMvc.perform(put("/api/interfaces/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.name").value("改名后的接口"))
+                .andExpect(jsonPath("$.data.path").value("/api/renamed"));
+    }
+
+    @Test
+    void shouldReturn404WhenUpdatingMissingInterface() throws Exception {
+        when(apiInterfaceService.getById(999L)).thenReturn(null);
+
+        String json = "{\"name\":\"改名\",\"path\":\"/api/test\",\"method\":\"GET\"}";
+        mockMvc.perform(put("/api/interfaces/999")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value(404));
+    }
+
+    @Test
+    void shouldDeleteInterface() throws Exception {
+        when(apiInterfaceService.getById(1L)).thenReturn(apiInterface);
+        when(apiInterfaceService.removeById(1L)).thenReturn(true);
+
+        mockMvc.perform(delete("/api/interfaces/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200));
+    }
+
+    @Test
+    void shouldReturn404WhenDeletingMissingInterface() throws Exception {
+        when(apiInterfaceService.getById(999L)).thenReturn(null);
+
+        mockMvc.perform(delete("/api/interfaces/999"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value(404));
     }
 }
