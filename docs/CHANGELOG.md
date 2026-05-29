@@ -92,3 +92,61 @@ mockbird/
 | 异常处理 | @ControllerAdvice 三个 handler | 覆盖业务异常、校验异常、兜底异常 |
 | 测试适配 | standaloneSetup + setControllerAdvice | 保持单测速度，不引入 Spring 上下文 |
 | JaCoCo 版本 | 0.8.12 | JDK 8 兼容 |
+
+## Day 4 — 接口管理 CRUD + 分页查询 + DTO/VO 分层 + 全项目注释（2026-05-27）
+
+**完成内容**：
+
+- ApiInterface 完整 CRUD（分页列表/详情/创建/更新/删除），保持原有 `/invoke` 代理接口不变
+- 分页查询支持按名称模糊搜索、按方法类型筛选（GET/POST/PUT/DELETE）、按项目过滤
+- DTO/VO 分层：请求用 DTO（ApiInterfaceCreateRequest/UpdateRequest/PageRequest），响应用 VO（含跨表 projectName）
+- `PageResult<T>` 统一分页响应包装 + MyBatis-Plus 分页插件配置
+- Bean Validation 参数校验（`@Valid` + `@NotNull`/`@NotBlank`）
+- 全项目 27 个 Java 文件 Javadoc 注释补全
+- InvokeRequest/InvokeResponse 统一使用 Lombok `@Data`
+- ApiInterfaceControllerTest 25 个测试（9 invoke + 16 CRUD），34 个测试全部通过
+
+**技术决策**：
+
+| 决策 | 选择 | 原因 |
+|------|------|------|
+| 请求参数 | DTO 类替代裸字段 | 可加校验注解，与 Entity 解耦 |
+| 响应数据 | VO 含 projectName | 避免前端二次查项目名 |
+| projectId 不可改 | UpdateRequest 不含 projectId | 接口归属创建后不应变更 |
+| 分页条件 | LambdaQueryWrapper | 编译期安全检查，避免字符串字段名 |
+| method 统一 uppercase | `toUpperCase()` | 存储层统一，查询时不区分大小写 |
+| 全项目注释 | 27 个文件全加 Javadoc | 学习项目，注释便利理解 |
+
+**AI 使用心得**：
+
+| 发现 | 教训 |
+|------|------|
+| AI 默认保守缩小改动范围 | 不是提示问题，AI 应先做全项目扫描确认边界，责任在 AI |
+| 安装插件/hooks 不知道自己装了什么 | ECC 插件带了 232 skills + GateGuard 拦截，后续装插件前先让 AI 扫描 |
+| Hooks 对 AI 透明 | PreToolUse hooks 在工具执行前拦截，AI 感知不到，表象是"改不动代码" |
+| GateGuard 成本高 | 本次会话 $59+，GateGuard 每个 Edit 需要 2-3 次重复调用，已禁用 |
+
+**当前状态**：后端 4 张表、34 测试、全 CRUD + 注释，Day 5 将进入 Mock 规则引擎。
+
+## Day 5 — Mock 规则引擎：路径匹配 + 响应模板 + 单元测试（2026-05-28）
+
+**完成内容**：
+
+- 实现 `PathMatcher` 路径匹配器：精确匹配 > `{param}` 路径变量匹配
+- 实现 `TemplateEngine` 模板引擎：`${timestamp}`、`${randomInt}`、`${randomInt(min,max)}`、`${request.param.xxx}`、`${request.header.xxx}`、`${request.body}`
+- `MockRuleController` 完整 CRUD，创建时校验关联接口是否存在
+- `MockRequestController` Mock 请求入口（`/mock/**`），串联路径匹配→规则查找→模板渲染→日志记录
+- Log 写入 `request_log` 表
+- 7+8+11=26 个新增测试，全项目 60 测试通过
+- curl 端到端验证：`/mock/actuator/health` 返回动态数据
+
+**技术决策**：
+
+| 决策 | 选择 | 原因 |
+|------|------|------|
+| Mock 入口 | `/mock/**` 独立映射 | 与 `/api/*` CRUD 分离 |
+| 路径匹配 | {param} → `([^/]+)` regex | JDK 自带，无需引入第三方 |
+| 模板引擎 | 自实现 regex 替换 | 简单够用 |
+| MatchResult | 独立文件 | Java public class 规则 |
+
+**当前状态**：Mock 引擎核心链路跑通，60 测试通过。Day 6-7 周末复盘，Day 8 进入 Swagger 导入或前端开发。
