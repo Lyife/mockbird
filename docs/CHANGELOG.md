@@ -179,3 +179,29 @@ mockbird/
 4. 经验可编码为 Skill——双循环流程可封装为可复用技能
 
 **当前状态**：第一周结束，后端核心功能完整（4 表 + 60 测试 + Mock 引擎）。Day 8 开始第二周：Swagger 导入或前端开发。
+
+## Day 8 — Swagger/OpenAPI 文件导入（2026-06-03）
+
+**完成内容**：
+
+- 集成 MinIO 对象存储（minio:7.1.4, JDK 8 兼容），MinioConfig 自动创建 bucket
+- 实现 `OpenApiParser` 解析器：支持 OpenAPI 3.0 JSON/YAML，遍历 paths 提取 GET/POST/PUT/DELETE/PATCH 等操作
+- 创建 `FileController` 文件上传端点 `POST /api/files/upload`
+- 全链路：上传文件 → 存 MinIO → 解析 OpenAPI → 批量创建 ApiInterface → 返回导入结果
+- 异常处理：空文件、项目不存在、格式校验、JSON/YAML 解析错误、非 OpenAPI 文档
+- 12 个新增测试（7 OpenApiParser + 5 FileController），全项目 72 测试通过
+
+**技术决策**：
+
+| 决策 | 选择 | 原因 |
+|------|------|------|
+| MinIO SDK 版本 | 7.1.4 | JDK 8 兼容，8.x 需要 Java 11+ |
+| YAML 解析 | Jackson YAML → JsonNode 统一处理 | 与 JSON 解析复用同一套 extract 逻辑 |
+| 解析范围 | 仅 paths 节点 | 第一期不做 schema/components 导入 |
+| 名称生成 | summary 优先 → 降级为 METHOD path | 保证每条接口都有可读名称 |
+| 构造器注入 | FileController 使用构造器注入 | MinioClient + String bucket + Service 混合注入 |
+
+**新增文件**：MinioConfig、OpenApiParser、OpenApiImportResult、FileController、OpenApiParserTest、FileControllerTest
+**修改文件**：pom.xml（2 新依赖）、application.yml（MinIO + multipart 配置）
+
+**当前状态**：后端 72 测试通过，MinIO 集成就绪，OpenAPI 导入功能完成。
