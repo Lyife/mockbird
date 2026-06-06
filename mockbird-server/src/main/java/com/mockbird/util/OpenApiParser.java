@@ -22,6 +22,17 @@ public class OpenApiParser {
     private static final List<String> HTTP_METHODS = Arrays.asList(
             "get", "post", "put", "delete", "patch", "options", "head", "trace");
 
+    private static final String KEY_OPENAPI = "openapi";
+    private static final String KEY_PATHS = "paths";
+    private static final String KEY_SUMMARY = "summary";
+    private static final String KEY_PARAMETERS = "parameters";
+    private static final String KEY_RESPONSES = "responses";
+    private static final String KEY_200 = "200";
+    private static final String KEY_CONTENT = "content";
+    private static final String KEY_APP_JSON = "application/json";
+    private static final String KEY_EXAMPLE = "example";
+    private static final String KEY_SCHEMA = "schema";
+
     private OpenApiParser() {
     }
 
@@ -55,17 +66,17 @@ public class OpenApiParser {
     }
 
     private static void validateOpenApi(JsonNode root) {
-        if (!root.has("openapi")) {
+        if (!root.has(KEY_OPENAPI)) {
             throw new IllegalArgumentException("不是有效的 OpenAPI 3.0 文档（缺少 openapi 字段）");
         }
-        if (!root.has("paths")) {
+        if (!root.has(KEY_PATHS)) {
             throw new IllegalArgumentException("OpenAPI 文档中没有 paths 定义");
         }
     }
 
     private static List<ApiInterface> extractInterfaces(JsonNode root, Long projectId) {
         List<ApiInterface> list = new ArrayList<>();
-        JsonNode paths = root.get("paths");
+        JsonNode paths = root.get(KEY_PATHS);
         Iterator<String> pathNames = paths.fieldNames();
         while (pathNames.hasNext()) {
             String path = pathNames.next();
@@ -91,44 +102,44 @@ public class OpenApiParser {
     }
 
     private static String extractName(JsonNode operation, String path, String method) {
-        if (operation.has("summary") && !operation.get("summary").asText().isEmpty()) {
-            return operation.get("summary").asText();
+        if (operation.has(KEY_SUMMARY) && !operation.get(KEY_SUMMARY).asText().isEmpty()) {
+            return operation.get(KEY_SUMMARY).asText();
         }
         return method.toUpperCase() + " " + path;
     }
 
     private static String extractParams(JsonNode operation) {
-        if (!operation.has("parameters")) {
+        if (!operation.has(KEY_PARAMETERS)) {
             return null;
         }
         try {
-            return JSON_MAPPER.writeValueAsString(operation.get("parameters"));
+            return JSON_MAPPER.writeValueAsString(operation.get(KEY_PARAMETERS));
         } catch (JsonProcessingException e) {
             return null;
         }
     }
 
     private static String extractResponseExample(JsonNode operation) {
-        JsonNode responses = operation.get("responses");
-        if (responses == null || !responses.has("200")) {
+        JsonNode responses = operation.get(KEY_RESPONSES);
+        if (responses == null || !responses.has(KEY_200)) {
             return null;
         }
-        JsonNode ok = responses.get("200");
-        JsonNode content = ok.get("content");
-        if (content == null || !content.has("application/json")) {
+        JsonNode ok = responses.get(KEY_200);
+        JsonNode content = ok.get(KEY_CONTENT);
+        if (content == null || !content.has(KEY_APP_JSON)) {
             return null;
         }
-        JsonNode jsonContent = content.get("application/json");
-        if (jsonContent.has("example")) {
+        JsonNode jsonContent = content.get(KEY_APP_JSON);
+        if (jsonContent.has(KEY_EXAMPLE)) {
             try {
-                return JSON_MAPPER.writeValueAsString(jsonContent.get("example"));
+                return JSON_MAPPER.writeValueAsString(jsonContent.get(KEY_EXAMPLE));
             } catch (JsonProcessingException e) {
                 return null;
             }
         }
-        if (jsonContent.has("schema")) {
+        if (jsonContent.has(KEY_SCHEMA)) {
             try {
-                return JSON_MAPPER.writeValueAsString(jsonContent.get("schema"));
+                return JSON_MAPPER.writeValueAsString(jsonContent.get(KEY_SCHEMA));
             } catch (JsonProcessingException e) {
                 return null;
             }

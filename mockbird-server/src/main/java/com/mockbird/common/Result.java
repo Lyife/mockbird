@@ -26,8 +26,8 @@ public class Result<T> {
      */
     public static <T> Result<T> success(T data) {
         Result<T> result = new Result<>();
-        result.code = 200;
-        result.message = "success";
+        result.code = Constants.CODE_SUCCESS;
+        result.message = Constants.MSG_SUCCESS;
         result.data = data;
         return result;
     }

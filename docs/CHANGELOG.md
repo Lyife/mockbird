@@ -205,3 +205,31 @@ mockbird/
 **修改文件**：pom.xml（2 新依赖）、application.yml（MinIO + multipart 配置）
 
 **当前状态**：后端 72 测试通过，MinIO 集成就绪，OpenAPI 导入功能完成。
+
+## Day 9 — 魔法值清理 + 前端起步（2026-06-05）
+
+**Part 1: 魔法值清理**
+
+- 新建 `Constants.java` 集中管理 22 个共享常量（状态码、错误消息、Content-Type、默认值、模板前缀、MinIO 配置）
+- 重构 11 个 Java 文件：common 层（Result、GlobalExceptionHandler）、5 个 Controller、2 个 Util、1 个 Config
+- 72 测试通过
+
+**Part 2: 前端后台管理布局**
+
+- 新建 6 个文件：router/index.ts、api/index.ts、api/project.ts、layout/MainLayout.vue、views/Home.vue、views/ProjectList.vue
+- 改造 3 个文件：main.ts（注册 router）、App.vue（router-view）、style.css（全局样式）
+- Element Plus 后台管理布局：侧边栏菜单 + 顶部导航 + 内容区
+- axios 封装：响应拦截器统一 ElMessage 错误提示
+- 项目列表页：el-table + el-pagination，调 `/api/projects`
+- 修复 3 个运行问题：MinIO 凭据、MySQL JDBC `allowPublicKeyRetrieval`、前端 API 异常未捕获
+
+**技术决策**：
+
+| 决策 | 选择 | 原因 |
+|------|------|------|
+| 常量范围 | 只在逻辑代码中用，注解属性不处理 | @TableName、@RequestMapping 属于配置元数据 |
+| 前端路由 | `/` 独立首页 + `/projects` 在 MainLayout 内 | 首页不需要侧边栏 |
+| Pinia | 暂不引入 | 项目列表页无需全局状态 |
+| 错误处理 | axios 拦截器弹提示 + 组件 catch 静默 | 双重防护，不崩溃 |
+
+**当前状态**：后端 72 测试通过，前端布局 + 项目列表页就绪，前后端联调通过。

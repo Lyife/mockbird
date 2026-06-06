@@ -2,6 +2,7 @@ package com.mockbird.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.mockbird.common.Constants;
 import com.mockbird.common.PageResult;
 import com.mockbird.common.Result;
 import com.mockbird.entity.ApiInterface;
@@ -51,7 +52,7 @@ public class MockRuleController {
     public Result<MockRule> detail(@PathVariable Long id) {
         MockRule rule = mockRuleService.getById(id);
         if (rule == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Mock 规则不存在: " + id);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, Constants.MSG_MOCK_RULE_NOT_FOUND + id);
         }
         return Result.success(rule);
     }
@@ -66,13 +67,13 @@ public class MockRuleController {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "关联接口不存在: " + rule.getApiInterfaceId());
         }
         if (rule.getEnabled() == null) {
-            rule.setEnabled(1);
+            rule.setEnabled(Constants.DEFAULT_ENABLED);
         }
         if (rule.getResponseStatusCode() == null) {
-            rule.setResponseStatusCode(200);
+            rule.setResponseStatusCode(Constants.DEFAULT_STATUS_CODE);
         }
         if (rule.getDelayMs() == null) {
-            rule.setDelayMs(0);
+            rule.setDelayMs(Constants.DEFAULT_DELAY_MS);
         }
         mockRuleService.save(rule);
         return Result.success(rule);
@@ -82,7 +83,7 @@ public class MockRuleController {
     public Result<MockRule> update(@PathVariable Long id, @RequestBody MockRule rule) {
         MockRule existing = mockRuleService.getById(id);
         if (existing == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Mock 规则不存在: " + id);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, Constants.MSG_MOCK_RULE_NOT_FOUND + id);
         }
         rule.setId(id);
         mockRuleService.updateById(rule);
@@ -93,7 +94,7 @@ public class MockRuleController {
     public Result<Void> delete(@PathVariable Long id) {
         MockRule existing = mockRuleService.getById(id);
         if (existing == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Mock 规则不存在: " + id);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, Constants.MSG_MOCK_RULE_NOT_FOUND + id);
         }
         mockRuleService.removeById(id);
         return Result.success(null);

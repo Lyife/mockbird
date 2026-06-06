@@ -1,5 +1,6 @@
 package com.mockbird.controller;
 
+import com.mockbird.common.Constants;
 import com.mockbird.common.Result;
 import com.mockbird.entity.Project;
 import com.mockbird.service.ProjectService;
@@ -43,7 +44,7 @@ public class ProjectController {
     public Result<Project> getById(@PathVariable Long id) {
         Project project = projectService.getById(id);
         if (project == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "项目不存在: " + id);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, Constants.MSG_PROJECT_NOT_FOUND + id);
         }
         return Result.success(project);
     }
@@ -72,7 +73,7 @@ public class ProjectController {
     public Result<Project> update(@PathVariable Long id, @Valid @RequestBody Project project) {
         // 存在性校验：不存在则返回 404，防止更新无效记录
         if (projectService.getById(id) == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "项目不存在: " + id);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, Constants.MSG_PROJECT_NOT_FOUND + id);
         }
         project.setId(id);
         projectService.updateById(project);
@@ -89,7 +90,7 @@ public class ProjectController {
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable Long id) {
         if (projectService.getById(id) == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "项目不存在: " + id);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, Constants.MSG_PROJECT_NOT_FOUND + id);
         }
         projectService.removeById(id);
         return Result.success(null);

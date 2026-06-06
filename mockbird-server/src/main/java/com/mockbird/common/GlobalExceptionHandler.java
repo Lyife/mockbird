@@ -57,7 +57,7 @@ public class GlobalExceptionHandler {
         // 记录完整堆栈，方便线上排查
         log.error("未处理的异常", ex);
         // 不暴露异常细节给前端，返回通用错误信息
-        Result<Void> result = Result.error(500, "服务器内部错误");
+        Result<Void> result = Result.error(500, Constants.MSG_SERVER_ERROR);
         return new ResponseEntity<>(result, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

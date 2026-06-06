@@ -12,14 +12,17 @@ import org.springframework.web.client.RestTemplate;
 @Configuration
 public class RestTemplateConfig {
 
+    private static final int CONNECT_TIMEOUT = 5000;
+    private static final int READ_TIMEOUT = 30000;
+
     /**
      * 创建 RestTemplate Bean，配置 5 秒连接超时和 30 秒读取超时。
      */
     @Bean
     public RestTemplate restTemplate() {
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-        factory.setConnectTimeout(5000);
-        factory.setReadTimeout(30000);
+        factory.setConnectTimeout(CONNECT_TIMEOUT);
+        factory.setReadTimeout(READ_TIMEOUT);
         return new RestTemplate(factory);
     }
 }

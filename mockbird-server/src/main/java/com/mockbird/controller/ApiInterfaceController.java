@@ -2,6 +2,7 @@ package com.mockbird.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.mockbird.common.Constants;
 import com.mockbird.common.PageResult;
 import com.mockbird.common.Result;
 import com.mockbird.dto.ApiInterfaceCreateRequest;
@@ -112,7 +113,7 @@ public class ApiInterfaceController {
     public Result<ApiInterfaceVO> getById(@PathVariable Long id) {
         ApiInterface api = apiInterfaceService.getById(id);
         if (api == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "接口不存在: " + id);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, Constants.MSG_INTERFACE_NOT_FOUND + id);
         }
         // Entity → VO，并查关联项目名称
         ApiInterfaceVO vo = new ApiInterfaceVO();
@@ -163,7 +164,7 @@ public class ApiInterfaceController {
         // 存在性校验：不存在则返回 404
         ApiInterface api = apiInterfaceService.getById(id);
         if (api == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "接口不存在: " + id);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, Constants.MSG_INTERFACE_NOT_FOUND + id);
         }
         // DTO 拷贝到已有 Entity（保留 id 和 projectId）
         BeanUtils.copyProperties(request, api);
@@ -191,7 +192,7 @@ public class ApiInterfaceController {
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable Long id) {
         if (apiInterfaceService.getById(id) == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "接口不存在: " + id);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, Constants.MSG_INTERFACE_NOT_FOUND + id);
         }
         apiInterfaceService.removeById(id);
         return Result.success(null);
@@ -217,13 +218,13 @@ public class ApiInterfaceController {
         // 1. 查接口定义
         ApiInterface api = apiInterfaceService.getById(id);
         if (api == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "接口不存在: " + id);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, Constants.MSG_INTERFACE_NOT_FOUND + id);
         }
 
         // 2. 查所属项目
         Project project = projectService.getById(api.getProjectId());
         if (project == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "项目不存在: " + api.getProjectId());
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, Constants.MSG_PROJECT_NOT_FOUND + api.getProjectId());
         }
 
         // 3. 确定上游地址：接口级优先，其次项目级

@@ -1,6 +1,7 @@
 package com.mockbird.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.mockbird.common.Constants;
 import com.mockbird.entity.ApiInterface;
 import com.mockbird.entity.MockRule;
 import com.mockbird.entity.RequestLog;
@@ -48,7 +49,7 @@ public class MockRequestController {
         long startTime = System.currentTimeMillis();
 
         String requestURI = request.getRequestURI();
-        String targetPath = requestURI.substring(requestURI.indexOf("/mock") + "/mock".length());
+        String targetPath = requestURI.substring(requestURI.indexOf(Constants.MOCK_PATH_PREFIX) + Constants.MOCK_PATH_PREFIX.length());
         if (targetPath.isEmpty()) {
             targetPath = "/";
         }
@@ -58,36 +59,36 @@ public class MockRequestController {
         Enumeration<String> paramNames = request.getParameterNames();
         while (paramNames.hasMoreElements()) {
             String name = paramNames.nextElement();
-            context.put("request.param." + name, request.getParameter(name));
+            context.put(Constants.TEMPLATE_PREFIX_PARAM + name, request.getParameter(name));
         }
         Enumeration<String> headerNames = request.getHeaderNames();
         while (headerNames.hasMoreElements()) {
             String name = headerNames.nextElement();
-            context.put("request.header." + name, request.getHeader(name));
+            context.put(Constants.TEMPLATE_PREFIX_HEADER + name, request.getHeader(name));
         }
         String requestBody = readBody(request);
-        context.put("request.body", requestBody);
+        context.put(Constants.TEMPLATE_KEY_BODY, requestBody);
 
         // 路径匹配
         List<ApiInterface> allApis = apiInterfaceService.list();
         MatchResult matched = PathMatcher.match(targetPath, allApis);
         if (matched == null) {
             response.setStatus(404);
-            response.setContentType("application/json;charset=UTF-8");
+            response.setContentType(Constants.CONTENT_TYPE_JSON_UTF8);
             response.getWriter().write("{\"code\":404,\"message\":\"未找到匹配的 Mock 接口: " + targetPath + "\"}");
             return;
         }
 
         ApiInterface api = matched.getApiInterface();
         for (Map.Entry<String, String> entry : matched.getPathVars().entrySet()) {
-            context.put("path." + entry.getKey(), entry.getValue());
+            context.put(Constants.TEMPLATE_PREFIX_PATH + entry.getKey(), entry.getValue());
         }
 
         // 查找启用的 Mock 规则
         MockRule rule = findEnabledRule(api.getId());
         if (rule == null) {
             response.setStatus(404);
-            response.setContentType("application/json;charset=UTF-8");
+            response.setContentType(Constants.CONTENT_TYPE_JSON_UTF8);
             response.getWriter().write("{\"code\":404,\"message\":\"接口无启用的 Mock 规则\"}");
             logRequest(startTime, request, api, null, targetPath, requestBody, 404, null);
             return;
@@ -106,9 +107,9 @@ public class MockRequestController {
         String renderedBody = TemplateEngine.render(rule.getResponseBody(), context);
 
         // 写响应
-        int statusCode = rule.getResponseStatusCode() != null ? rule.getResponseStatusCode() : 200;
+        int statusCode = rule.getResponseStatusCode() != null ? rule.getResponseStatusCode() : Constants.DEFAULT_STATUS_CODE;
         response.setStatus(statusCode);
-        response.setContentType("application/json;charset=UTF-8");
+        response.setContentType(Constants.CONTENT_TYPE_JSON_UTF8);
         response.getWriter().write(renderedBody);
 
         // 记录日志
@@ -119,7 +120,7 @@ public class MockRequestController {
         List<MockRule> rules = mockRuleService.list(
                 new LambdaQueryWrapper<MockRule>()
                         .eq(MockRule::getApiInterfaceId, apiInterfaceId)
-                        .eq(MockRule::getEnabled, 1)
+                        .eq(MockRule::getEnabled, Constants.DEFAULT_ENABLED)
                         .orderByDesc(MockRule::getCreatedAt));
         return rules.isEmpty() ? null : rules.get(0);
     }

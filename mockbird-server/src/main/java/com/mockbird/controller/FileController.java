@@ -1,5 +1,6 @@
 package com.mockbird.controller;
 
+import com.mockbird.common.Constants;
 import com.mockbird.common.Result;
 import com.mockbird.dto.OpenApiImportResult;
 import com.mockbird.entity.ApiInterface;
@@ -45,31 +46,31 @@ public class FileController {
     public Result<OpenApiImportResult> upload(@RequestParam("file") MultipartFile file,
                                               @RequestParam("projectId") Long projectId) throws Exception {
         if (file.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "文件不能为空");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, Constants.MSG_FILE_EMPTY);
         }
         Project project = projectService.getById(projectId);
         if (project == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "项目不存在: " + projectId);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, Constants.MSG_PROJECT_NOT_FOUND + projectId);
         }
         String filename = file.getOriginalFilename();
         if (filename == null || (!filename.endsWith(".json") && !filename.endsWith(".yaml") && !filename.endsWith(".yml"))) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "仅支持 JSON/YAML 格式的文件");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, Constants.MSG_UNSUPPORTED_FORMAT);
         }
 
-        String objectName = "openapi/" + UUID.randomUUID() + "-" + filename;
+        String objectName = Constants.MINIO_OBJECT_PREFIX + UUID.randomUUID() + "-" + filename;
         byte[] bytes = file.getBytes();
         try (InputStream stream = new ByteArrayInputStream(bytes)) {
             minioClient.putObject(PutObjectArgs.builder()
                     .bucket(bucket)
                     .object(objectName)
-                    .stream(stream, bytes.length, -1)
-                    .contentType("application/octet-stream")
+                    .stream(stream, bytes.length, Constants.MINIO_PART_SIZE)
+                    .contentType(Constants.MINIO_UPLOAD_CONTENT_TYPE)
                     .build());
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "文件存储失败: " + e.getMessage());
         }
 
-        String content = new String(bytes, "UTF-8");
+        String content = new String(bytes, Constants.CHARSET_UTF8);
         List<ApiInterface> interfaces;
         try {
             interfaces = OpenApiParser.parse(content, projectId);

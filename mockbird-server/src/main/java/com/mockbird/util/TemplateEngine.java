@@ -14,6 +14,9 @@ public class TemplateEngine {
     private static final Pattern RANDOM_INT_RANGE = Pattern.compile("randomInt\\((\\d+),\\s*(\\d+)\\)");
     private static final Random RANDOM = new Random();
 
+    private static final String FUNC_TIMESTAMP = "timestamp";
+    private static final String FUNC_RANDOM_INT = "randomInt";
+
     /**
      * 处理模板字符串，替换所有 ${...} 占位符。
      *
@@ -44,11 +47,11 @@ public class TemplateEngine {
             return null;
         }
 
-        if ("timestamp".equals(key)) {
+        if (FUNC_TIMESTAMP.equals(key)) {
             return String.valueOf(System.currentTimeMillis());
         }
 
-        if ("randomInt".equals(key)) {
+        if (FUNC_RANDOM_INT.equals(key)) {
             return String.valueOf(RANDOM.nextInt(10000));
         }
 
