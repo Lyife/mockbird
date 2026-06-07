@@ -17,6 +17,16 @@ const router = createRouter({
         },
       ],
     },
+    {
+      path: '/interfaces',
+      component: () => import('../layout/MainLayout.vue'),
+      children: [
+        {
+          path: '',
+          component: () => import('../views/InterfaceList.vue'),
+        },
+      ],
+    },
   ],
 })
 

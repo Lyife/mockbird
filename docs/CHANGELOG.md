@@ -233,3 +233,28 @@ mockbird/
 | 错误处理 | axios 拦截器弹提示 + 组件 catch 静默 | 双重防护，不崩溃 |
 
 **当前状态**：后端 72 测试通过，前端布局 + 项目列表页就绪，前后端联调通过。
+
+## Day 10 — 前端项目管理 CRUD 完善 + 接口列表页（2026-06-06）
+
+**完成内容**：
+
+- 项目管理页新增新建/编辑弹窗（el-dialog + el-form）和删除确认（ElMessageBox），操作列含编辑/删除按钮
+- 新增接口列表页：分页表格 + 名称搜索 + 方法筛选（el-tag 着色）+ 新建/编辑弹窗（含项目下拉选择）+ 删除确认
+- 侧边栏新增"接口管理"菜单项，路由新增 `/interfaces`
+- 封装 `api/interface.ts`（5 个类型 + 4 个 API 函数）
+- `api/project.ts` 新增 createProject / updateProject / deleteProject
+
+**技术决策**：
+
+| 决策 | 选择 | 原因 |
+|------|------|------|
+| 项目列表分页 | 前端 slice 假分页 | 项目数量少，后端 GET /api/projects 返回全量 |
+| 接口列表分页 | 后端真分页 | 接口可能多，GET /api/interfaces 支持 page/size |
+| 方法着色 | el-tag 按方法类型设色 | GET 绿/POST 蓝/PUT 橙/DELETE 红，视觉区分 |
+| editingId | null 表示新建，有值表示编辑 | 复用同一弹窗，简单直观 |
+| 接口新建编辑 | 同一弹窗，editingId 区分 | 与 ProjectList 保持一致模式 |
+
+**新增文件**：api/interface.ts、views/InterfaceList.vue
+**修改文件**：api/project.ts、views/ProjectList.vue、layout/MainLayout.vue、router/index.ts
+
+**当前状态**：前端 2 页面 CRUD 完整，前后端联调通过，准备进入 Mock 规则配置页或在线测试页。

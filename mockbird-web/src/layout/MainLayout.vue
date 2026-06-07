@@ -24,6 +24,9 @@ function handleSelect(index: string) {
         <el-menu-item index="/projects">
           <span>项目管理</span>
         </el-menu-item>
+        <el-menu-item index="/interfaces">
+          <span>接口管理</span>
+        </el-menu-item>
       </el-menu>
     </el-aside>
     <el-container>
