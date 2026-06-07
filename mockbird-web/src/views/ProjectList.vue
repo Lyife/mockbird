@@ -83,6 +83,11 @@ async function loadProjects() {
   }
 }
 
+function formatDate(_row: unknown, _col: unknown, val: string) {
+  if (!val) return ''
+  return val.replace('T', ' ').substring(0, 19)
+}
+
 onMounted(() => {
   loadProjects()
 })
@@ -99,7 +104,7 @@ onMounted(() => {
       <el-table-column prop="name" label="项目名称" min-width="160" />
       <el-table-column prop="description" label="描述" min-width="200" show-overflow-tooltip />
       <el-table-column prop="upstreamUrl" label="上游地址" min-width="200" show-overflow-tooltip />
-      <el-table-column prop="createdAt" label="创建时间" width="180" />
+      <el-table-column prop="createdAt" label="创建时间" width="180" :formatter="formatDate" />
       <el-table-column label="操作" width="160" fixed="right">
         <template #default="{ row }">
           <el-button size="small" @click="openEdit(row)">编辑</el-button>

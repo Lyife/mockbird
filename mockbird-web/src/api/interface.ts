@@ -30,7 +30,7 @@ export interface InterfacePageResult {
 }
 
 export interface InterfaceCreateData {
-  projectId: number
+  projectId: number | null
   name: string
   path: string
   method: string
