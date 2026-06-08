@@ -10,6 +10,7 @@ import com.mockbird.entity.MockRule;
 import com.mockbird.service.ApiInterfaceService;
 import com.mockbird.service.MockRuleService;
 import org.springframework.http.HttpStatus;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -36,9 +37,13 @@ public class MockRuleController {
     public Result<PageResult<MockRule>> list(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String name,
             @RequestParam(required = false) Long apiInterfaceId) {
 
         LambdaQueryWrapper<MockRule> wrapper = new LambdaQueryWrapper<>();
+        if (StringUtils.hasText(name)) {
+            wrapper.like(MockRule::getName, name);
+        }
         if (apiInterfaceId != null) {
             wrapper.eq(MockRule::getApiInterfaceId, apiInterfaceId);
         }

@@ -27,6 +27,9 @@ function handleSelect(index: string) {
         <el-menu-item index="/interfaces">
           <span>接口管理</span>
         </el-menu-item>
+        <el-menu-item index="/mock-rules">
+          <span>Mock 规则</span>
+        </el-menu-item>
       </el-menu>
     </el-aside>
     <el-container>

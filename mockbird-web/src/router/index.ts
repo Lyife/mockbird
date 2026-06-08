@@ -27,6 +27,16 @@ const router = createRouter({
         },
       ],
     },
+    {
+      path: '/mock-rules',
+      component: () => import('../layout/MainLayout.vue'),
+      children: [
+        {
+          path: '',
+          component: () => import('../views/MockRuleList.vue'),
+        },
+      ],
+    },
   ],
 })
 
