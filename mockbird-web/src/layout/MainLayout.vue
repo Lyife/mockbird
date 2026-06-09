@@ -30,6 +30,9 @@ function handleSelect(index: string) {
         <el-menu-item index="/mock-rules">
           <span>Mock 规则</span>
         </el-menu-item>
+        <el-menu-item index="/online-test">
+          <span>在线测试</span>
+        </el-menu-item>
       </el-menu>
     </el-aside>
     <el-container>

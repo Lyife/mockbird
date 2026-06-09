@@ -37,6 +37,16 @@ const router = createRouter({
         },
       ],
     },
+    {
+      path: '/online-test',
+      component: () => import('../layout/MainLayout.vue'),
+      children: [
+        {
+          path: '',
+          component: () => import('../views/OnlineTest.vue'),
+        },
+      ],
+    },
   ],
 })
 
