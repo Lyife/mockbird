@@ -47,6 +47,16 @@ const router = createRouter({
         },
       ],
     },
+    {
+      path: '/request-logs',
+      component: () => import('../layout/MainLayout.vue'),
+      children: [
+        {
+          path: '',
+          component: () => import('../views/RequestLogList.vue'),
+        },
+      ],
+    },
   ],
 })
 

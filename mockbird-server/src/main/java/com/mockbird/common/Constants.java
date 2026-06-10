@@ -16,6 +16,7 @@ public final class Constants {
     public static final String MSG_PROJECT_NOT_FOUND = "项目不存在: ";
     public static final String MSG_INTERFACE_NOT_FOUND = "接口不存在: ";
     public static final String MSG_MOCK_RULE_NOT_FOUND = "Mock 规则不存在: ";
+    public static final String MSG_REQUEST_LOG_NOT_FOUND = "请求日志不存在: ";
     public static final String MSG_FILE_EMPTY = "文件不能为空";
     public static final String MSG_UNSUPPORTED_FORMAT = "仅支持 JSON/YAML 格式的文件";
     public static final String MSG_SERVER_ERROR = "服务器内部错误";

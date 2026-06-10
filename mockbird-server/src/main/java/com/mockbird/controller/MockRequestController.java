@@ -150,7 +150,7 @@ public class MockRequestController {
         log.setResponseBody(responseBody);
         log.setDurationMs(System.currentTimeMillis() - startTime);
         log.setCreatedAt(LocalDateTime.now());
-        requestLogService.save(log);
+        requestLogService.saveAsync(log);
     }
 
     private String headersJson(HttpServletRequest request) {

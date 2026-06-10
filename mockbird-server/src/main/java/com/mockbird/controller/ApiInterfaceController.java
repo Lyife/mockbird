@@ -12,8 +12,10 @@ import com.mockbird.dto.InvokeRequest;
 import com.mockbird.dto.InvokeResponse;
 import com.mockbird.entity.ApiInterface;
 import com.mockbird.entity.Project;
+import com.mockbird.entity.RequestLog;
 import com.mockbird.service.ApiInterfaceService;
 import com.mockbird.service.ProjectService;
+import com.mockbird.service.RequestLogService;
 import com.mockbird.vo.ApiInterfaceVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.http.HttpEntity;
@@ -30,7 +32,9 @@ import org.springframework.web.util.UriComponentsBuilder;
 import javax.annotation.Resource;
 import javax.validation.Valid;
 import java.net.URI;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -57,6 +61,9 @@ public class ApiInterfaceController {
 
     @Resource
     private RestTemplate restTemplate;
+
+    @Resource
+    private RequestLogService requestLogService;
 
     // ==================== CRUD 接口 ====================
 
@@ -269,6 +276,39 @@ public class ApiInterfaceController {
         result.setHeaders(response.getHeaders());
         result.setBody(response.getBody());
         result.setDurationMs(duration);
+
+        // 9. 异步记录请求日志
+        RequestLog log = new RequestLog();
+        log.setProjectId(api.getProjectId());
+        log.setApiInterfaceId(api.getId());
+        log.setRequestMethod(api.getMethod());
+        log.setRequestPath(api.getPath());
+        log.setRequestHeaders(mapToJson(request.getHeaders()));
+        log.setRequestBody(request.getBody());
+        log.setResponseStatusCode(response.getStatusCodeValue());
+        log.setResponseBody(response.getBody());
+        log.setDurationMs(duration);
+        log.setCreatedAt(LocalDateTime.now());
+        requestLogService.saveAsync(log);
+
         return Result.success(result);
+    }
+
+    private String mapToJson(Map<String, String> map) {
+        if (map == null || map.isEmpty()) {
+            return "{}";
+        }
+        StringBuilder json = new StringBuilder("{");
+        boolean first = true;
+        for (Map.Entry<String, String> entry : map.entrySet()) {
+            if (!first) json.append(",");
+            json.append("\"").append(entry.getKey().replace("\\", "\\\\").replace("\"", "\\\""))
+                    .append("\":\"")
+                    .append(entry.getValue() != null ? entry.getValue().replace("\\", "\\\\").replace("\"", "\\\"") : "")
+                    .append("\"");
+            first = false;
+        }
+        json.append("}");
+        return json.toString();
     }
 }

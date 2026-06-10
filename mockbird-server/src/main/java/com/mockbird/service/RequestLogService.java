@@ -9,4 +9,6 @@ import com.mockbird.entity.RequestLog;
  * 具体业务方法可在此接口中添加声明。
  */
 public interface RequestLogService extends IService<RequestLog> {
+
+    void saveAsync(RequestLog log);
 }
